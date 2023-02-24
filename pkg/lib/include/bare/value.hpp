@@ -75,91 +75,135 @@ namespace bare {
     /**
      * Variable length unsigned integer.
      */
-    class UintValue: public Value { };
-
-    /**
-     * Fixed 8-bit unsigned integer.
-     */
-    class Uint8Value: public Value {
+    class UintValue: public Value {
     public:
-      uint8_t value;
-    };
-
-    /**
-     * Fixed 16-bit unsigned integer.
-     */
-    class Uint16Value: public Value {
-    public:
-      uint16_t value;
-    };
-
-    /**
-     * Fixed 32-bit unsigned integer.
-     */
-    class Uint32Value: public Value {
-    public:
-      uint32_t value;
-    };
-
-    /**
-     * Fixed 64-bit unsigned integer.
-     */
-    class Uint64Value: public Value {
-    public:
+      // TODO: optionally use https://gmplib.org/ to store arbitrarily large integers
       uint64_t value;
+
+    public:
+      UintValue();
+      UintValue(const uint64_t& initial);
+
+      operator uint64_t() const;
+      UintValue& operator =(const uint64_t& value);
     };
 
     /**
      * Variable length signed integer.
      */
-    class IntValue: public Value { };
+    class IntValue: public Value {
+    private:
+      // TODO: optionally use https://gmplib.org/ to store arbitrarily large integers
+      int64_t value;
+
+    public:
+      IntValue();
+      IntValue(const int64_t& initial);
+
+      operator int64_t() const;
+      IntValue& operator =(const int64_t& value);
+    };
+
+    /**
+     * Abstract base class for fixed integer values.
+     */
+    template <typename T>
+    class FixedIntValue: public Value {
+    public:
+      T value;
+
+    public:
+      FixedIntValue();
+      FixedIntValue(const T& initial);
+
+      operator T() const;
+      FixedIntValue& operator =(const T& value);
+    };
+
+    /**
+     * Fixed 8-bit unsigned integer.
+     */
+    class Uint8Value: public FixedIntValue<uint8_t> {
+      using FixedIntValue<uint8_t>::FixedIntValue;
+    };
+
+    /**
+     * Fixed 16-bit unsigned integer.
+     */
+    class Uint16Value: public FixedIntValue<uint16_t> {
+      using FixedIntValue<uint16_t>::FixedIntValue;
+    };
+
+    /**
+     * Fixed 32-bit unsigned integer.
+     */
+    class Uint32Value: public FixedIntValue<uint32_t> {
+      using FixedIntValue<uint32_t>::FixedIntValue;
+    };
+
+    /**
+     * Fixed 64-bit unsigned integer.
+     */
+    class Uint64Value: public FixedIntValue<uint64_t> {
+      using FixedIntValue<uint64_t>::FixedIntValue;
+    };
 
     /**
      * Fixed 8-bit signed integer.
      */
-    class Int8Value: public Value {
-    public:
-      int8_t value;
+    class Int8Value: public FixedIntValue<int8_t> {
+      using FixedIntValue<int8_t>::FixedIntValue;
     };
 
     /**
      * Fixed 16-bit signed integer.
      */
-    class Int16Value: public Value {
-    public:
-      int16_t value;
+    class Int16Value: public FixedIntValue<int16_t> {
+      using FixedIntValue<int16_t>::FixedIntValue;
     };
 
     /**
      * Fixed 32-bit signed integer.
      */
-    class Int32Value: public Value {
-    public:
-      int32_t value;
+    class Int32Value: public FixedIntValue<int32_t> {
+      using FixedIntValue<int32_t>::FixedIntValue;
     };
 
     /**
      * Fixed 64-bit signed integer.
      */
-    class Int64Value: public Value {
+    class Int64Value: FixedIntValue<int64_t> {
+      using FixedIntValue<int64_t>::FixedIntValue;
+    };
+
+    /**
+     * Abstract base class for fixed floating point values.
+     */
+    template <typename T>
+    class FixedFloatValue: public Value {
     public:
-      int64_t value;
+      T value;
+
+    public:
+      FixedFloatValue();
+      FixedFloatValue(const T& initial);
+
+      operator T() const;
+      FixedFloatValue& operator =(const T& value);
     };
 
     /**
      * Fixed 32-bit float.
      */
-    class Float32Value: public Value {
-    public:
-      float value;
+    class Float32Value: public FixedFloatValue<float> {
+      using FixedFloatValue<float>::FixedFloatValue;
     };
 
     /**
      * Fixed 64-bit float.
      */
-    class Float64Value: public Value {
-    public:
-      double value;
+    class Float64Value: public FixedFloatValue<double> {
+      using FixedFloatValue<double>::FixedFloatValue;
     };
 
     /**
@@ -195,9 +239,8 @@ namespace bare {
     /**
      * Enumeration.
      */
-    class EnumValue: public Value {
-    public:
-      UintValue value;
+    class EnumValue: public UintValue {
+      using UintValue::UintValue;
     };
 
     /**
@@ -213,7 +256,7 @@ namespace bare {
      */
     class ListValue: public Value {
     public:
-      typedef std::vector<Value> list_values_t;
+      typedef std::vector<user_value_t> list_values_t;
 
     public:
       std::optional<UintValue> fixed_size;
@@ -225,7 +268,7 @@ namespace bare {
      */
     class MapValue: public Value {
     public:
-      typedef std::unordered_map<Value, Value> map_values_t;
+      typedef std::unordered_map<user_value_t, user_value_t> map_values_t;
 
     public:
       map_values_t values;

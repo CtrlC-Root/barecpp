@@ -78,59 +78,71 @@ namespace bare {
     class UintType: public Type { };
 
     /**
-     * Fixed 8-bit unsigned integer.
-     */
-    class Uint8Type: public Type { };
-
-    /**
-     * Fixed 16-bit unsigned integer.
-     */
-    class Uint16Type: public Type { };
-
-    /**
-     * Fixed 32-bit unsigned integer.
-     */
-    class Uint32Type: public Type { };
-
-    /**
-     * Fixed 64-bit unsigned integer.
-     */
-    class Uint64Type: public Type { };
-
-    /**
      * Variable length signed integer.
      */
     class IntType: public Type { };
 
     /**
+     * Abstract base class for fixed integer types.
+     */
+    template <typename T>
+    class FixedIntType: public Type { };
+
+    /**
+     * Fixed 8-bit unsigned integer.
+     */
+    class Uint8Type: public FixedIntType<uint8_t> { };
+
+    /**
+     * Fixed 16-bit unsigned integer.
+     */
+    class Uint16Type: public FixedIntType<uint16_t> { };
+
+    /**
+     * Fixed 32-bit unsigned integer.
+     */
+    class Uint32Type: public FixedIntType<uint32_t> { };
+
+    /**
+     * Fixed 64-bit unsigned integer.
+     */
+    class Uint64Type: public FixedIntType<uint64_t> { };
+
+    /**
      * Fixed 8-bit signed integer.
      */
-    class Int8Type: public Type { };
+    class Int8Type: public FixedIntType<int8_t> { };
 
     /**
      * Fixed 16-bit signed integer.
      */
-    class Int16Type: public Type { };
+    class Int16Type: public FixedIntType<int16_t> { };
 
     /**
      * Fixed 32-bit signed integer.
      */
-    class Int32Type: public Type { };
+    class Int32Type: public FixedIntType<int32_t> { };
 
     /**
      * Fixed 64-bit signed integer.
      */
-    class Int64Type: public Type { };
+    class Int64Type: public FixedIntType<int64_t> { };
+
+    /**
+     * Abstract base class for fixed floating point values.
+     */
+    template <typename T>
+    class FixedFloatType: public Type { };
 
     /**
      * Fixed 32-bit float.
      */
-    class Float32Type: public Type { };
+    class Float32Type: public FixedFloatType<float> { };
 
     /**
      * Fixed 64-bit float.
      */
-    class Float64Type: public Type { };
+    class Float64Type: public FixedFloatType<double> { };
 
     /**
      * Boolean.
@@ -160,10 +172,7 @@ namespace bare {
      */
     class EnumType: public Type {
     public:
-      typedef std::unordered_map<
-        std::string,
-        bare::value::UintValue
-      > enum_values_t;
+      typedef std::unordered_map<std::string, bare::value::UintValue> enum_values_t;
 
     public:
       enum_values_t values;
@@ -200,10 +209,7 @@ namespace bare {
      */
     class UnionType: public Type {
     public:
-      typedef std::unordered_map<
-        user_type_t,
-        bare::value::UintValue
-      > union_members_t;
+      typedef std::unordered_map<user_type_t, bare::value::UintValue> union_members_t;
 
     public:
       union_members_t members;
