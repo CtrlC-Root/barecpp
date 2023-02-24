@@ -26,6 +26,10 @@ UintValue& UintValue::operator =(const uint64_t& value) {
   return *this;
 }
 
+void UintValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
 /**
  * IntValue
  */
@@ -47,6 +51,10 @@ IntValue::operator int64_t() const {
 IntValue& IntValue::operator =(const int64_t& value) {
   this->value = value;
   return *this;
+}
+
+void IntValue::encode(byte_buffer_t& buffer) const {
+  // TODO
 }
 
 /**
@@ -74,6 +82,11 @@ template <typename T>
 FixedIntValue<T>& FixedIntValue<T>::operator =(const T& value) {
   this->value = value;
   return *this;
+}
+
+template <typename T>
+void FixedIntValue<T>::encode(byte_buffer_t& buffer) const {
+  // TODO
 }
 
 template class FixedIntValue<uint8_t>;
@@ -112,5 +125,82 @@ FixedFloatValue<T>& FixedFloatValue<T>::operator =(const T& value) {
   return *this;
 }
 
+template <typename T>
+void FixedFloatValue<T>::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
 template class FixedFloatValue<float>;
 template class FixedFloatValue<double>;
+
+/**
+ * BoolValue
+ */
+
+void BoolValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * StrValue
+ */
+
+void StrValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * DataValue
+ */
+
+void DataValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * VoidValue
+ */
+
+void VoidValue::encode(byte_buffer_t& buffer) const {
+  // nothing to do
+}
+
+/**
+ * OptionalValue
+ */
+
+void OptionalValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * ListValue
+ */
+
+void ListValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * MapValue
+ */
+
+void MapValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * UnionValue
+ */
+
+void UnionValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}
+
+/**
+ * StructValue
+ */
+
+void StructValue::encode(byte_buffer_t& buffer) const {
+  // TODO
+}

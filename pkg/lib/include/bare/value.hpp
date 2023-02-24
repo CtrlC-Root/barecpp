@@ -68,9 +68,17 @@ namespace bare {
     > user_value_t;
 
     /**
+     * TODO.
+     */
+    typedef std::vector<std::byte> byte_buffer_t;
+
+    /**
      * Abstract base class for values.
      */
-    class Value { };
+    class Value {
+    public:
+        virtual void encode(byte_buffer_t& buffer) const = 0;
+    };
 
     /**
      * Variable length unsigned integer.
@@ -86,6 +94,8 @@ namespace bare {
 
       operator uint64_t() const;
       UintValue& operator =(const uint64_t& value);
+
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -102,6 +112,8 @@ namespace bare {
 
       operator int64_t() const;
       IntValue& operator =(const int64_t& value);
+
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -118,6 +130,8 @@ namespace bare {
 
       operator T() const;
       FixedIntValue& operator =(const T& value);
+
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -190,6 +204,8 @@ namespace bare {
 
       operator T() const;
       FixedFloatValue& operator =(const T& value);
+
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -212,6 +228,9 @@ namespace bare {
     class BoolValue: public Value {
     public:
       bool value;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -220,6 +239,9 @@ namespace bare {
     class StrValue: public Value {
     public:
       std::string value;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -229,12 +251,18 @@ namespace bare {
     public:
       std::optional<UintValue> fixed_size;
       std::vector<uint8_t> value;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
      * Void.
      */
-    class VoidValue: public Value { };
+    class VoidValue: public Value {
+    public:
+      void encode(byte_buffer_t& buffer) const;
+    };
 
     /**
      * Enumeration.
@@ -248,7 +276,11 @@ namespace bare {
      */
     class OptionalValue: public Value {
     public:
+      // TODO: void value not allowed
       std::optional<std::unique_ptr<user_value_t>> value;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -256,11 +288,16 @@ namespace bare {
      */
     class ListValue: public Value {
     public:
+      // TODO: void value not allowed
       typedef std::vector<user_value_t> list_values_t;
 
     public:
+      // TODO: must be between (1, UINT64_MAX) inclusive
       std::optional<UintValue> fixed_size;
       list_values_t values;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -268,10 +305,16 @@ namespace bare {
      */
     class MapValue: public Value {
     public:
+      // TODO: keys must all be the same type
+      // TODO: f32, f64, data, data[length] keys not allowed
+      // TODO: void keys or values not allowed
       typedef std::unordered_map<user_value_t, user_value_t> map_values_t;
 
     public:
       map_values_t values;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -281,6 +324,9 @@ namespace bare {
     public:
       UintValue tag;
       std::unique_ptr<user_value_t> value;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
 
     /**
@@ -288,10 +334,15 @@ namespace bare {
      */
     class StructValue: public Value {
     public:
+      // TODO: void value not allowed
+      // TODO: must contain at least one field
       typedef std::map<std::string, user_value_t> struct_fields_t;
 
     public:
       struct_fields_t fields;
+
+    public:
+      void encode(byte_buffer_t& buffer) const;
     };
   }
 }
