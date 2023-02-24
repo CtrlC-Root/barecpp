@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+
+def options(ctx):
+    """
+    Define configuration options.
+    """
+
+    pass
+
+
+def configure(ctx):
+    """
+    Configure the project.
+    """
+
+    pass
+
+
+def build(ctx):
+    """
+    Build the project.
+    """
+
+    ctx.stlib(
+        target='bare',
+        source=ctx.path.ant_glob('src/**/*.cpp'),
+        includes='./include',
+        export_includes='./include')
