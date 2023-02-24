@@ -29,7 +29,7 @@ def configure(ctx):
     ctx.load('compiler_cxx')
 
     # configure C++ compiler
-    ctx.env.append_value('CXXFLAGS', ['-std=c++17', '-Wall', '-Werror'])
+    ctx.env.append_value('CXXFLAGS', ['-std=c++20', '-Wall', '-Werror'])
     if ctx.options.debug:
         ctx.env.append_value('CXXFLAGS', ['-g', '-O0'])
 
