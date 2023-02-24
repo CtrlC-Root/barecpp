@@ -17,6 +17,7 @@ def options(ctx):
 
     ctx.recurse('vendor')
     ctx.recurse('pkg/lib')
+    ctx.recurse('pkg/test')
     ctx.recurse('pkg/bq')
 
 
@@ -34,6 +35,7 @@ def configure(ctx):
 
     ctx.recurse('vendor')
     ctx.recurse('pkg/lib')
+    ctx.recurse('pkg/test')
     ctx.recurse('pkg/bq')
 
 
@@ -44,4 +46,5 @@ def build(ctx):
 
     ctx.recurse('vendor')
     ctx.recurse('pkg/lib')
+    ctx.recurse('pkg/test')
     ctx.recurse('pkg/bq')

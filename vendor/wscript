@@ -17,10 +17,18 @@ def configure(ctx):
     # cxxopts
     ctx.env.INCLUDES_cxxopts = [ctx.path.get_src().find_node('cxxopts/include/').abspath()]
 
+    # Catch2
+    pass
+
 
 def build(ctx):
     """
     Build vendored projects.
     """
 
-    pass
+    # Catch2
+    ctx.stlib(
+        target='Catch2',
+        source=['Catch2/extras/catch_amalgamated.cpp'],
+        # includes='./include',
+        export_includes=['Catch2/extras/'])

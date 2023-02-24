@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+
+def options(ctx):
+    """
+    Define configuration options.
+    """
+
+    pass
+
+
+def configure(ctx):
+    """
+    Configure the project.
+    """
+
+    pass
+
+
+def build(ctx):
+    """
+    Build the project.
+    """
+
+    ctx.program(
+        target='test',
+        source=ctx.path.ant_glob('src/**/*.cpp'),
+        use=['bare', 'Catch2'])
