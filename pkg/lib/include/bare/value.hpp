@@ -1,6 +1,7 @@
 #pragma once
 
 // C++ Standard Library
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -40,7 +41,7 @@ namespace bare {
     class StructValue;
 
     /**
-     * User type variant.
+     * Any type variant.
      */
     typedef std::variant<
       UintValue,
@@ -65,10 +66,62 @@ namespace bare {
       MapValue,
       UnionValue,
       StructValue
-    > user_value_t;
+    > any_value_t;
 
     /**
-     * TODO.
+     * Any concrete type variant.
+     *
+     * This includes all types except the void type.
+     */
+    typedef std::variant<
+      UintValue,
+      Uint8Value,
+      Uint16Value,
+      Uint32Value,
+      Uint64Value,
+      IntValue,
+      Int8Value,
+      Int16Value,
+      Int32Value,
+      Int64Value,
+      Float32Value,
+      Float64Value,
+      BoolValue,
+      StrValue,
+      DataValue,
+      EnumValue,
+      OptionalValue,
+      ListValue,
+      MapValue,
+      UnionValue,
+      StructValue
+    > concrete_value_t;
+
+    /**
+     * Any type suitable as a map key variant.
+     */
+    typedef std::variant<
+      UintValue,
+      Uint8Value,
+      Uint16Value,
+      Uint32Value,
+      Uint64Value,
+      IntValue,
+      Int8Value,
+      Int16Value,
+      Int32Value,
+      Int64Value,
+      BoolValue,
+      StrValue,
+      EnumValue
+    > map_key_value_t;
+
+    /**
+     * Byte buffer for storing encoded values.
+     *
+     * XXX: Some way to use output byte streams instead?
+     * XXX: https://tuttlem.github.io/2014/08/18/getting-istream-to-work-off-a-byte-array.html
+     * XXX: https://github.com/cplusplus/papers/issues/860
      */
     typedef std::vector<std::byte> byte_buffer_t;
 
@@ -84,8 +137,8 @@ namespace bare {
      * Variable length unsigned integer.
      */
     class UintValue: public Value {
-    public:
-      // TODO: optionally use https://gmplib.org/ to store arbitrarily large integers
+    private:
+      // XXX: consider using https://gmplib.org/ to store arbitrarily large integers
       uint64_t value;
 
     public:
@@ -103,7 +156,7 @@ namespace bare {
      */
     class IntValue: public Value {
     private:
-      // TODO: optionally use https://gmplib.org/ to store arbitrarily large integers
+      // XXX: consider using https://gmplib.org/ to store arbitrarily large integers
       int64_t value;
 
     public:
@@ -121,7 +174,7 @@ namespace bare {
      */
     template <typename T>
     class FixedIntValue: public Value {
-    public:
+    private:
       T value;
 
     public:
@@ -186,7 +239,7 @@ namespace bare {
     /**
      * Fixed 64-bit signed integer.
      */
-    class Int64Value: FixedIntValue<int64_t> {
+    class Int64Value: public FixedIntValue<int64_t> {
       using FixedIntValue<int64_t>::FixedIntValue;
     };
 
@@ -195,7 +248,7 @@ namespace bare {
      */
     template <typename T>
     class FixedFloatValue: public Value {
-    public:
+    private:
       T value;
 
     public:
@@ -226,10 +279,16 @@ namespace bare {
      * Boolean.
      */
     class BoolValue: public Value {
-    public:
+    private:
       bool value;
 
     public:
+      BoolValue();
+      BoolValue(const bool& initial);
+
+      operator bool() const;
+      BoolValue& operator =(const bool& value);
+
       void encode(byte_buffer_t& buffer) const;
     };
 
@@ -250,7 +309,7 @@ namespace bare {
     class DataValue: public Value {
     public:
       std::optional<UintValue> fixed_size;
-      std::vector<uint8_t> value;
+      byte_buffer_t value;
 
     public:
       void encode(byte_buffer_t& buffer) const;
@@ -276,8 +335,7 @@ namespace bare {
      */
     class OptionalValue: public Value {
     public:
-      // TODO: void value not allowed
-      std::optional<std::unique_ptr<user_value_t>> value;
+      std::shared_ptr<concrete_value_t> value;
 
     public:
       void encode(byte_buffer_t& buffer) const;
@@ -288,8 +346,8 @@ namespace bare {
      */
     class ListValue: public Value {
     public:
-      // TODO: void value not allowed
-      typedef std::vector<user_value_t> list_values_t;
+      // TODO: values must all be the same type
+      typedef std::vector<concrete_value_t> list_values_t;
 
     public:
       // TODO: must be between (1, UINT64_MAX) inclusive
@@ -306,9 +364,7 @@ namespace bare {
     class MapValue: public Value {
     public:
       // TODO: keys must all be the same type
-      // TODO: f32, f64, data, data[length] keys not allowed
-      // TODO: void keys or values not allowed
-      typedef std::unordered_map<user_value_t, user_value_t> map_values_t;
+      typedef std::unordered_map<map_key_value_t, concrete_value_t> map_values_t;
 
     public:
       map_values_t values;
@@ -323,7 +379,7 @@ namespace bare {
     class UnionValue: public Value {
     public:
       UintValue tag;
-      std::unique_ptr<user_value_t> value;
+      std::shared_ptr<any_value_t> value;
 
     public:
       void encode(byte_buffer_t& buffer) const;
@@ -334,9 +390,8 @@ namespace bare {
      */
     class StructValue: public Value {
     public:
-      // TODO: void value not allowed
       // TODO: must contain at least one field
-      typedef std::map<std::string, user_value_t> struct_fields_t;
+      typedef std::map<std::string, concrete_value_t> struct_fields_t;
 
     public:
       struct_fields_t fields;
