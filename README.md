@@ -4,6 +4,12 @@ BARE C++ Serialization Library
 
 ## Quick Start
 
+Update Git submodules:
+
+```bash
+git submodules update --recursive --init
+```
+
 Configure the build:
 
 ```bash
