@@ -1,0 +1,25 @@
+name: Continuous Integration
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install Python 3
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+      - name: Configure project
+        run: ./waf configure
+      - name: Build project
+        run: ./waf build
+      - name: Run tests
+        run: ./build/pkg/test/test
