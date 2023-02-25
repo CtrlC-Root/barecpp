@@ -5,6 +5,8 @@
 #include <array>
 #include <bit>
 
+#include <iostream> // DEBUG
+
 using namespace bare::value;
 
 
@@ -55,6 +57,46 @@ void UintValue::encode(byte_buffer_t& buffer) const {
   } while (value != 0);
 }
 
+#include <bitset>
+
+std::ostream& operator<< (std::ostream& os, std::byte b) {
+    return os << std::bitset<8>(std::to_integer<int>(b));
+}
+
+std::pair<UintValue, byte_span_t> UintValue::decode(const byte_span_t& source) {
+  // https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer
+  // TODO: https://en.wikipedia.org/wiki/LEB128#Fast_decoding
+
+  byte_span_t relevant;
+  for (size_t i = 0; i < source.size(); i++) {
+    if ((source[i] & std::byte{0b10000000}) == std::byte{0}) {
+      relevant = source.subspan(0, i + 1);
+      break;
+    }
+  }
+
+  if (relevant.size() == 0) {
+    throw std::runtime_error("insufficient bytes in source");
+  }
+
+  // little endian encoding
+  uint64_t value = 0;
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little);
+  if (std::endian::native == std::endian::big) {
+    for (auto it = relevant.begin(); it != relevant.end(); ++it) {
+      value <<= 7;
+      value |= std::to_integer<uint8_t>(*it & std::byte{0b01111111});
+    }
+  } else {
+    for (auto it = relevant.rbegin(); it != relevant.rend(); ++it) {
+      value <<= 7;
+      value |= std::to_integer<uint8_t>(*it & std::byte{0b01111111});
+    }
+  }
+
+  return {UintValue(value), relevant};
+}
+
 /**
  * IntValue
  */
@@ -88,35 +130,49 @@ void IntValue::encode(byte_buffer_t& buffer) const {
   }
 }
 
+std::pair<IntValue, byte_span_t> IntValue::decode(const byte_span_t& source) {
+  // https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer
+  // TODO: https://en.wikipedia.org/wiki/LEB128#Fast_decoding
+
+  auto [decoded_uint, decoded_span] = UintValue::decode(source);
+  if (decoded_uint % 2 == 0) {
+    int64_t value = static_cast<int64_t>(decoded_uint / 2);
+    return {IntValue(value), decoded_span};
+  } else {
+    int64_t value = -1 * static_cast<int64_t>((decoded_uint + 1) / 2);
+    return {IntValue(value), decoded_span};
+  }
+}
+
 /**
  * FixedIntValue
  */
 
-template <typename T>
-FixedIntValue<T>::FixedIntValue()
+template <typename T, typename V>
+FixedIntValue<T, V>::FixedIntValue()
 : value(0) {
   // nothing to do
 }
 
-template <typename T>
-FixedIntValue<T>::FixedIntValue(const T& initial)
+template <typename T, typename V>
+FixedIntValue<T, V>::FixedIntValue(const T& initial)
 : value(initial) {
   // nothing to do
 }
 
-template <typename T>
-FixedIntValue<T>::operator T() const {
+template <typename T, typename V>
+FixedIntValue<T, V>::operator T() const {
   return this->value;
 }
 
-template <typename T>
-FixedIntValue<T>& FixedIntValue<T>::operator =(const T& value) {
+template <typename T, typename V>
+FixedIntValue<T, V>& FixedIntValue<T, V>::operator =(const T& value) {
   this->value = value;
   return *this;
 }
 
-template <typename T>
-void FixedIntValue<T>::encode(byte_buffer_t& buffer) const {
+template <typename T, typename V>
+void FixedIntValue<T, V>::encode(byte_buffer_t& buffer) const {
   // bitwise equivalent representation as an array of bytes
   const auto data = std::bit_cast<std::array<std::byte, sizeof(T)>>(this->value);
 
@@ -129,44 +185,64 @@ void FixedIntValue<T>::encode(byte_buffer_t& buffer) const {
   }
 }
 
-template class FixedIntValue<uint8_t>;
-template class FixedIntValue<uint16_t>;
-template class FixedIntValue<uint32_t>;
-template class FixedIntValue<uint64_t>;
-template class FixedIntValue<int8_t>;
-template class FixedIntValue<int16_t>;
-template class FixedIntValue<int32_t>;
-template class FixedIntValue<int64_t>;
+template <typename T, typename V>
+std::pair<V, byte_span_t> FixedIntValue<T, V>::decode(const byte_span_t& source) {
+  if (sizeof(T) > source.size()) {
+    throw std::runtime_error("insufficient bytes in source");
+  }
+
+  byte_span_t relevant = source.subspan(0, sizeof(T));
+  std::array<std::byte, sizeof(T)> data;
+  std::copy(relevant.begin(), relevant.end(), data.begin());
+
+  // little endian encoding
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little);
+  if (std::endian::native == std::endian::big) {
+    std::ranges::reverse(data);
+  }
+
+  T value = std::bit_cast<T>(data);
+  return {V(value), relevant};
+}
+
+template class FixedIntValue<uint8_t, Uint8Value>;
+template class FixedIntValue<uint16_t, Uint16Value>;
+template class FixedIntValue<uint32_t, Uint32Value>;
+template class FixedIntValue<uint64_t, Uint64Value>;
+template class FixedIntValue<int8_t, Int8Value>;
+template class FixedIntValue<int16_t, Int16Value>;
+template class FixedIntValue<int32_t, Int32Value>;
+template class FixedIntValue<int64_t, Int64Value>;
 
 /**
  * FixedFloatValue
  */
 
-template <typename T>
-FixedFloatValue<T>::FixedFloatValue()
+template <typename T, typename V>
+FixedFloatValue<T, V>::FixedFloatValue()
 : value(0.0) {
   // nothing to do
 }
 
-template <typename T>
-FixedFloatValue<T>::FixedFloatValue(const T& initial)
+template <typename T, typename V>
+FixedFloatValue<T, V>::FixedFloatValue(const T& initial)
 : value(initial) {
   // nothing to do
 }
 
-template <typename T>
-FixedFloatValue<T>::operator T() const {
+template <typename T, typename V>
+FixedFloatValue<T, V>::operator T() const {
   return this->value;
 }
 
-template <typename T>
-FixedFloatValue<T>& FixedFloatValue<T>::operator =(const T& value) {
+template <typename T, typename V>
+FixedFloatValue<T, V>& FixedFloatValue<T, V>::operator =(const T& value) {
   this->value = value;
   return *this;
 }
 
-template <typename T>
-void FixedFloatValue<T>::encode(byte_buffer_t& buffer) const {
+template <typename T, typename V>
+void FixedFloatValue<T, V>::encode(byte_buffer_t& buffer) const {
   // TODO: static assert for IEEE 754 float and double representation
   // https://kkimdev.github.io/posts/2018/06/15/IEEE-754-Floating-Point-Type-in-C++.html
 
@@ -175,8 +251,25 @@ void FixedFloatValue<T>::encode(byte_buffer_t& buffer) const {
   buffer.insert(buffer.end(), data.begin(), data.end());
 }
 
-template class FixedFloatValue<float>;
-template class FixedFloatValue<double>;
+template <typename T, typename V>
+std::pair<V, byte_span_t> FixedFloatValue<T, V>::decode(const byte_span_t& source) {
+  if (sizeof(T) > source.size()) {
+    throw std::runtime_error("insufficient bytes in source");
+  }
+
+  // TODO: static assert for IEEE 754 float and double representation
+  // https://kkimdev.github.io/posts/2018/06/15/IEEE-754-Floating-Point-Type-in-C++.html
+
+  byte_span_t relevant = source.subspan(0, sizeof(T));
+  std::array<std::byte, sizeof(T)> data;
+  std::copy(relevant.begin(), relevant.end(), data.begin());
+
+  T value = std::bit_cast<T>(data);
+  return {V(value), relevant};
+}
+
+template class FixedFloatValue<float, Float32Value>;
+template class FixedFloatValue<double, Float64Value>;
 
 /**
  * BoolValue
@@ -206,6 +299,19 @@ void BoolValue::encode(byte_buffer_t& buffer) const {
     buffer.push_back(std::byte{1});
   } else {
     buffer.push_back(std::byte{0});
+  }
+}
+
+std::pair<BoolValue, byte_span_t> BoolValue::decode(const byte_span_t& source) {
+  if (source.size() == 0) {
+    throw std::runtime_error("insufficient bytes in source");
+  }
+
+  byte_span_t relevant = source.subspan(0, 1);
+  if (relevant[0] == std::byte{0}) {
+    return {BoolValue(false), relevant};
+  } else {
+    return {BoolValue(true), relevant};
   }
 }
 

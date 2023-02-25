@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -126,6 +127,13 @@ namespace bare {
     typedef std::vector<std::byte> byte_buffer_t;
 
     /**
+     * Byte span for parsing values.
+     *
+     * XXX: Some way to use input byte streams instead?
+     */
+    typedef std::span<std::byte> byte_span_t;
+
+    /**
      * Abstract base class for values.
      */
     class Value {
@@ -149,6 +157,7 @@ namespace bare {
       UintValue& operator =(const uint64_t& value);
 
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<UintValue, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**
@@ -167,12 +176,13 @@ namespace bare {
       IntValue& operator =(const int64_t& value);
 
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<IntValue, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**
      * Abstract base class for fixed integer values.
      */
-    template <typename T>
+    template <typename T, typename V>
     class FixedIntValue: public Value {
     private:
       T value;
@@ -185,68 +195,69 @@ namespace bare {
       FixedIntValue& operator =(const T& value);
 
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<V, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**
      * Fixed 8-bit unsigned integer.
      */
-    class Uint8Value: public FixedIntValue<uint8_t> {
-      using FixedIntValue<uint8_t>::FixedIntValue;
+    class Uint8Value: public FixedIntValue<uint8_t, Uint8Value> {
+      using FixedIntValue<uint8_t, Uint8Value>::FixedIntValue;
     };
 
     /**
      * Fixed 16-bit unsigned integer.
      */
-    class Uint16Value: public FixedIntValue<uint16_t> {
-      using FixedIntValue<uint16_t>::FixedIntValue;
+    class Uint16Value: public FixedIntValue<uint16_t, Uint16Value> {
+      using FixedIntValue<uint16_t, Uint16Value>::FixedIntValue;
     };
 
     /**
      * Fixed 32-bit unsigned integer.
      */
-    class Uint32Value: public FixedIntValue<uint32_t> {
-      using FixedIntValue<uint32_t>::FixedIntValue;
+    class Uint32Value: public FixedIntValue<uint32_t, Uint32Value> {
+      using FixedIntValue<uint32_t, Uint32Value>::FixedIntValue;
     };
 
     /**
      * Fixed 64-bit unsigned integer.
      */
-    class Uint64Value: public FixedIntValue<uint64_t> {
-      using FixedIntValue<uint64_t>::FixedIntValue;
+    class Uint64Value: public FixedIntValue<uint64_t, Uint64Value> {
+      using FixedIntValue<uint64_t, Uint64Value>::FixedIntValue;
     };
 
     /**
      * Fixed 8-bit signed integer.
      */
-    class Int8Value: public FixedIntValue<int8_t> {
-      using FixedIntValue<int8_t>::FixedIntValue;
+    class Int8Value: public FixedIntValue<int8_t, Int8Value> {
+      using FixedIntValue<int8_t, Int8Value>::FixedIntValue;
     };
 
     /**
      * Fixed 16-bit signed integer.
      */
-    class Int16Value: public FixedIntValue<int16_t> {
-      using FixedIntValue<int16_t>::FixedIntValue;
+    class Int16Value: public FixedIntValue<int16_t, Int16Value> {
+      using FixedIntValue<int16_t, Int16Value>::FixedIntValue;
     };
 
     /**
      * Fixed 32-bit signed integer.
      */
-    class Int32Value: public FixedIntValue<int32_t> {
-      using FixedIntValue<int32_t>::FixedIntValue;
+    class Int32Value: public FixedIntValue<int32_t, Int32Value> {
+      using FixedIntValue<int32_t, Int32Value>::FixedIntValue;
     };
 
     /**
      * Fixed 64-bit signed integer.
      */
-    class Int64Value: public FixedIntValue<int64_t> {
-      using FixedIntValue<int64_t>::FixedIntValue;
+    class Int64Value: public FixedIntValue<int64_t, Int64Value> {
+      using FixedIntValue<int64_t, Int64Value>::FixedIntValue;
     };
 
     /**
      * Abstract base class for fixed floating point values.
      */
-    template <typename T>
+    template <typename T, typename V>
     class FixedFloatValue: public Value {
     private:
       T value;
@@ -259,20 +270,21 @@ namespace bare {
       FixedFloatValue& operator =(const T& value);
 
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<V, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**
      * Fixed 32-bit float.
      */
-    class Float32Value: public FixedFloatValue<float> {
-      using FixedFloatValue<float>::FixedFloatValue;
+    class Float32Value: public FixedFloatValue<float, Float32Value> {
+      using FixedFloatValue<float, Float32Value>::FixedFloatValue;
     };
 
     /**
      * Fixed 64-bit float.
      */
-    class Float64Value: public FixedFloatValue<double> {
-      using FixedFloatValue<double>::FixedFloatValue;
+    class Float64Value: public FixedFloatValue<double, Float64Value> {
+      using FixedFloatValue<double, Float64Value>::FixedFloatValue;
     };
 
     /**
@@ -290,6 +302,7 @@ namespace bare {
       BoolValue& operator =(const bool& value);
 
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<BoolValue, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**
