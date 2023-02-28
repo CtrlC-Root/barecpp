@@ -309,7 +309,7 @@ namespace bare {
      * Variable UTF-8 encoded string.
      */
     class StrValue: public Value {
-    public:
+    private:
       std::u8string value;
 
     public:
