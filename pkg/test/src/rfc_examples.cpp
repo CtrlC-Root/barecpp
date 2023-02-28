@@ -239,8 +239,33 @@ TEST_CASE("RFC example values", "[rfc]") {
     REQUIRE(decoded_span.size() == 0);
   }
 
-  // TODO: void
-  // TODO: enum
+  SECTION("enum") {
+    auto [naked_value, encoded_bytes] = GENERATE(table<uint64_t, bv::byte_buffer_t>({
+      {0,   bv::byte_buffer_t{ std::byte{0x00}                  }},
+      {255, bv::byte_buffer_t{ std::byte{0xFF}, std::byte{0x01} }},
+      {256, bv::byte_buffer_t{ std::byte{0x80}, std::byte{0x02} }}
+    }));
+
+    CAPTURE(naked_value);
+    CAPTURE(encoded_bytes);
+
+    // encoding
+    auto value = bv::EnumValue(naked_value);
+    value.encode(buffer);
+
+    CAPTURE(buffer);
+    REQUIRE(buffer.size() == encoded_bytes.size());
+    REQUIRE(std::equal(buffer.begin(), buffer.end(), encoded_bytes.begin()));
+
+    // decoding
+    auto [decoded_value, decoded_span] = bv::EnumValue::decode(buffer);
+
+    CAPTURE(decoded_value);
+    CAPTURE(decoded_span);
+    REQUIRE(decoded_span.size() == buffer.size());
+    REQUIRE(decoded_value == naked_value);
+  }
+
   // TODO: optional<u32>
   // TODO: list<str>
   // TODO: list<uint>[10]
