@@ -241,9 +241,9 @@ TEST_CASE("RFC example values", "[rfc]") {
 
   SECTION("enum") {
     auto [naked_value, encoded_bytes] = GENERATE(table<uint64_t, bv::byte_buffer_t>({
-      {0,   bv::byte_buffer_t{ std::byte{0x00}                  }},
-      {255, bv::byte_buffer_t{ std::byte{0xFF}, std::byte{0x01} }},
-      {256, bv::byte_buffer_t{ std::byte{0x80}, std::byte{0x02} }}
+      {0,   bv::byte_buffer_t{ std::byte{0x00}                  }},  // FOO
+      {255, bv::byte_buffer_t{ std::byte{0xFF}, std::byte{0x01} }},  // BAR = 255
+      {256, bv::byte_buffer_t{ std::byte{0x80}, std::byte{0x02} }}   // BAZ
     }));
 
     CAPTURE(naked_value);
