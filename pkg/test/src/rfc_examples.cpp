@@ -194,6 +194,33 @@ TEST_CASE("RFC example values", "[rfc]") {
     REQUIRE(decoded_value == naked_value);
   }
 
+  SECTION("str") {
+    const std::u8string naked_value = u8"\u0042\u0041\u0052\u0045";  // BARE in UTF-8
+    const bv::byte_buffer_t encoded_bytes = {
+      std::byte{0x04},  // length as uint value
+      std::byte{0x42}, std::byte{0x41}, std::byte{0x52}, std::byte{0x45}
+    };
+
+    CAPTURE(naked_value);
+    CAPTURE(encoded_bytes);
+
+    // encoding
+    auto value = bv::StrValue(naked_value);
+    value.encode(buffer);
+
+    CAPTURE(buffer);
+    REQUIRE(buffer.size() == encoded_bytes.size());
+    REQUIRE(std::equal(buffer.begin(), buffer.end(), encoded_bytes.begin()));
+
+    // decoding
+    auto [decoded_value, decoded_span] = bv::StrValue::decode(buffer);
+
+    CAPTURE(decoded_value);
+    CAPTURE(decoded_span);
+    REQUIRE(decoded_span.size() == buffer.size());
+    REQUIRE((decoded_value.operator std::u8string()) == naked_value);  // XXX: what is going on here?
+  }
+
   // TODO: str
   // TODO: data
   // TODO: data[16]

@@ -276,7 +276,7 @@ template class FixedFloatValue<double, Float64Value>;
  */
 
 BoolValue::BoolValue()
-:value(false) {
+: value(false) {
   // nothing to do
 }
 
@@ -319,6 +319,24 @@ std::pair<BoolValue, byte_span_t> BoolValue::decode(const byte_span_t& source) {
  * StrValue
  */
 
+StrValue::StrValue() {
+  // nothing to do
+}
+
+StrValue::StrValue(const std::u8string& initial)
+: value(initial) {
+  // nothing to do
+}
+
+StrValue::operator std::u8string() const {
+  return this->value;
+}
+
+StrValue& StrValue::operator =(const std::u8string& value) {
+  this->value = value;
+  return *this;
+}
+
 void StrValue::encode(byte_buffer_t& buffer) const {
   // string length as uint value
   auto uint_length = UintValue(this->value.size());
@@ -329,9 +347,22 @@ void StrValue::encode(byte_buffer_t& buffer) const {
     std::begin(this->value),
     std::end(this->value),
     std::back_inserter(buffer),
-    [](char c) {
+    [](char8_t c) {
       return std::byte(c);
     });
+}
+
+std::pair<StrValue, byte_span_t> StrValue::decode(const byte_span_t& source) {
+  // string length as uint value
+  auto [uint_length, uint_span] = UintValue::decode(source);
+
+  // string bytes
+  byte_span_t string_span = source.subspan(uint_span.size(), uint_length);
+  std::u8string value(
+    reinterpret_cast<char8_t*>(&string_span[0]),
+    string_span.size());
+
+  return {StrValue(value), source.subspan(0, uint_span.size() + string_span.size())};
 }
 
 /**

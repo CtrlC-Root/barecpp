@@ -310,10 +310,17 @@ namespace bare {
      */
     class StrValue: public Value {
     public:
-      std::string value;
+      std::u8string value;
 
     public:
+      StrValue();
+      StrValue(const std::u8string& initial);
+
+      operator std::u8string() const;
+      StrValue& operator =(const std::u8string& value);
+
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<StrValue, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**
