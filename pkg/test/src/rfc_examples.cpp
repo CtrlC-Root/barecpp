@@ -221,9 +221,24 @@ TEST_CASE("RFC example values", "[rfc]") {
     REQUIRE((decoded_value.operator std::u8string()) == naked_value);  // XXX: what is going on here?
   }
 
-  // TODO: str
   // TODO: data
   // TODO: data[16]
+
+  SECTION("void") {
+    // encoding
+    const bv::VoidValue value;
+    value.encode(buffer);
+
+    CAPTURE(buffer);
+    REQUIRE(buffer.size() == 0);
+
+    // decoding
+    auto [decoded_value, decoded_span] = bv::VoidValue::decode(buffer);
+
+    CAPTURE(decoded_span);
+    REQUIRE(decoded_span.size() == 0);
+  }
+
   // TODO: void
   // TODO: enum
   // TODO: optional<u32>

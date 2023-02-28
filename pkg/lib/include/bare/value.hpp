@@ -341,6 +341,7 @@ namespace bare {
     class VoidValue: public Value {
     public:
       void encode(byte_buffer_t& buffer) const;
+      static std::pair<VoidValue, byte_span_t> decode(const byte_span_t& source);
     };
 
     /**

@@ -387,6 +387,11 @@ void VoidValue::encode(byte_buffer_t& buffer) const {
   // nothing to do
 }
 
+std::pair<VoidValue, byte_span_t> VoidValue::decode(const byte_span_t& source) {
+  // nothing to do
+  return {VoidValue(), byte_span_t()};
+}
+
 /**
  * OptionalValue
  */
